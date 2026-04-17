@@ -8,7 +8,7 @@
 ## 0. TODO — name registration (do before public announce)
 
 - [x] **Register `sleuthgraph.com` (primary brand)** ✅ 2026-04-17
-- [ ] Register `sleuthgraph.io` (dev/technical audience)
+- [x] **Register `sleuthgraph.io` (dev/technical audience)** ✅ 2026-04-17
 - [ ] Register `sleuthgraph.org` (nonprofit/community positioning for grants)
 - [ ] Register `sleuthgraph.dev` (developer-facing docs)
 - [ ] Claim GitHub org: `github.com/sleuthgraph`
