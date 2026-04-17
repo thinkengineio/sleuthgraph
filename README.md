@@ -37,3 +37,29 @@ Open http://localhost:3000 (web) and http://localhost:8000/docs (api).
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
+
+## Status
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1. Foundation | ✅ Complete (2026-04-17) | `make up` brings full stack healthy; 12 tests passing; all 3 repos live |
+| 2. Auth (Grafana-style) | ⏳ Pending | |
+| 3. Cases + Entities API | ⏳ Pending | |
+| 4. Evidence chain of custody | ⏳ Pending | |
+| 5. Plugin SDK | ⏳ Pending | |
+| 6. Free-tier plugins (7) | ⏳ Pending | |
+| 7. BYOK plugins | ⏳ Pending | |
+| 8. Frontend shell | ⏳ Pending | |
+| 9. Graph visualization | ⏳ Pending | |
+| 10. AI + Reports + polish | ⏳ Pending | |
+
+### Phase 1 exit state (as of 0.1.0-alpha)
+
+- Meta, API, and Web repos public on GitHub (currently private under `francose/`)
+- `docker compose up` brings up 5 healthy services: db (Postgres+AGE), redis, minio, api, web
+- API: `/health`, `/readiness`, `/docs` endpoints live on :8000
+- Web: landing page with live API health indicator on :3000
+- MinIO console on :9001 with `evidence` bucket pre-created
+- AGE extension installed with `sleuthgraph` graph
+- 12 unit tests passing (7 API + 5 Web)
+- CI pipelines configured on all three repos
