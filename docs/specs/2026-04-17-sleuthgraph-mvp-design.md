@@ -1,19 +1,33 @@
-# OSINTkit — MVP Design Spec
+# Sleuthgraph — MVP Design Spec
 
 **Status:** Draft v1 · **Date:** 2026-04-17 · **Author:** Sadik Erisen (product)
-**Working name:** OSINTkit *(TBD — placeholder for spec)*
+**Name:** Sleuthgraph — verified available across .com / .io / .net / .org / .dev (2026-04-17 Bing check returned ~1 unrelated result)
+
+---
+
+## 0. TODO — name registration (do before public announce)
+
+- [ ] Register `sleuthgraph.com` (primary brand)
+- [ ] Register `sleuthgraph.io` (dev/technical audience)
+- [ ] Register `sleuthgraph.org` (nonprofit/community positioning for grants)
+- [ ] Register `sleuthgraph.dev` (developer-facing docs)
+- [ ] Claim GitHub org: `github.com/sleuthgraph`
+- [ ] Claim npm scope: `@sleuthgraph` (for any JS SDKs)
+- [ ] Claim PyPI package name: `sleuthgraph` (for Python SDK / CLI)
+- [ ] Check USPTO trademark database for conflicts in Class 9 (software) and Class 42 (SaaS)
+- [ ] Claim social handles: `@sleuthgraph` on X, Mastodon, LinkedIn company page
 
 ---
 
 ## 1. Summary
 
-OSINTkit is a **self-hostable, open-source OSINT investigation workbench** that unifies free data sources natively and integrates commercial sources via Bring-Your-Own-Key (BYOK), with built-in forensic chain of custody and AI-assisted pivot suggestions.
+Sleuthgraph is a **self-hostable, open-source OSINT investigation workbench** that unifies free data sources natively and integrates commercial sources via Bring-Your-Own-Key (BYOK), with built-in forensic chain of custody and AI-assisted pivot suggestions.
 
 The product is positioned as **"Grafana for OSINT"** — not a competitor to OCCRP Aleph, Sayari, SpiderFoot, or Maltego, but a unified interface that aggregates them.
 
 **Strategic positioning:**
 
-| vs. | OSINTkit differentiation |
+| vs. | Sleuthgraph differentiation |
 |---|---|
 | Maltego | Open source, modern UX, AI-assisted, affordable, easier extensibility |
 | Sayari Graph | Individual analyst accessible (not enterprise-only), self-hostable, BYOK |
@@ -39,7 +53,7 @@ The product is positioned as **"Grafana for OSINT"** — not a competitor to OCC
 
 ## 4. Users
 
-| Persona | Needs | How OSINTkit serves them |
+| Persona | Needs | How Sleuthgraph serves them |
 |---|---|---|
 | **Independent investigator / PI** | Low cost, self-hostable, unified workflow | OSS core, BYOK, no vendor lock-in |
 | **Investigative journalist** | Evidence chain of custody, open source (trust), collaboration-ready | Hashed evidence + transparent methodology |
@@ -239,12 +253,13 @@ Out of MVP scope: autonomous multi-step investigation loops. That's a v2 feature
 
 ## 8. Open questions for post-spec decisions
 
-1. **Name** — OSINTkit / Invest / OpenCase / something else? (bikeshed)
+1. ~~**Name**~~ → **RESOLVED: Sleuthgraph** (verified 2026-04-17: Bing returned ~1 unrelated result; domains .com/.io/.net/.org/.dev all available)
 2. **Logo / branding** — later
-3. **Domain name** — need to check availability once name is chosen
-4. **GitHub org** — personal account or new org?
+3. **Domain registration** — see TODO list in section 0 above
+4. **GitHub org** — claim `github.com/sleuthgraph` org (separate from personal account)
 5. **Initial scope of IC-tradecraft report format** — full ICD 203 compliance is aspirational; MVP is "IC-tradecraft-inspired"
 6. **First public release** — private beta with ~10 users → public 0.1.0?
+7. **Legal entity** — product should be owned by the cybersecurity research LLC (formation TBD)
 
 ---
 
