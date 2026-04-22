@@ -2,64 +2,137 @@
 
 Open-source OSINT investigation workbench. Self-hostable. Apache 2.0.
 
-> **Status:** Pre-alpha. Not yet usable. See [spec](docs/specs/2026-04-17-sleuthgraph-mvp-design.md).
+> **Status:** Pre-alpha — APIs may change between releases. Core investigation workflow is end-to-end usable: log in, create a case, add entities, pivot across 8 free OSINT plugins, inspect results in an interactive Cytoscape graph with full evidence chain of custody.
+
+## What is it?
+
+Sleuthgraph is what you reach for when you've outgrown a spreadsheet of URLs and screenshots but don't want to pay for Maltego. It's a typed entity-and-relationship graph backed by Postgres + Apache AGE, wrapped in a case-scoped workspace with append-only evidence storage and a pluggable adapter SDK for any OSINT data source.
+
+Think **Grafana for OSINT**: you bring the cases, plugins pivot across public APIs (Certificate Transparency, DNS, Wayback Machine, OpenCorporates, GitHub, OpenSanctions, Aleph, URLhaus — all free), every HTTP call is captured as timestamped evidence with content-addressed storage, and the resulting entity graph is rendered interactively so you can spot patterns a table view hides.
+
+### Features (shipped)
+
+- **Grafana-style auth** — email/password or OIDC SSO (Keycloak / Authentik / Google), bootstrapped admin, disable-able signup, password reset via email, cookie-backed sessions
+- **Case workspace** — case-scoped isolation, ownership enforced at every layer, soft delete
+- **Typed entity graph** — 8 core types (PERSON, ORGANIZATION, DOMAIN, IP_ADDRESS, EMAIL, PHONE, URL, CRYPTO_ADDRESS); 9 relationship types; Postgres + Apache AGE dual-write so both SQL and Cypher queries work
+- **Evidence chain of custody** — every plugin HTTP call captured with SHA-256-addressed raw payload in MinIO, `reproducibility_spec` JSON, append-only ledger, CSV export with formula-injection neutralization
+- **Plugin SDK** — Python `OSINTPlugin` ABC with `EntityProposal` / `RelationshipProposal` / `EvidenceProposal` types; dedup helpers; sync + async (arq worker) dispatch; per-plugin byte + proposal caps
+- **8 built-in plugins** — crt.sh, DNS/WHOIS (RDAP), Wayback CDX, OpenCorporates, GitHub public, OpenSanctions, Aleph (OCCRP), URLhaus. All free, no API keys required.
+- **Interactive graph viz** — Cytoscape.js canvas with 4 layouts (cose-bilkent, concentric, breadthfirst, dagre), animated transitions, hover focus lens, type-colored nodes, click-to-drawer entity/relationship detail
+- **Async task queue** — arq + Redis worker for long-running plugin runs; sync plugins return inline, async ones return 202 and poll
+- **Security-conscious defaults** — HKDF subkey derivation from a single `SECRET_KEY`, PKCE S256 on OIDC, id_token validation (signature + iss + aud + nonce), `email_verified` enforcement on auto-link, password rotation on account link, Redis AUTH required, SSRF hardening on plugin inputs
+
+### Pending
+
+- **Phase 7** — BYOK credentialed plugins (HIBP, VirusTotal, IntelX, Shodan premium) with encrypted credential vault
+- **Phase 10** — AI-assisted pivot suggestions + report export (Claude API integration)
 
 ## Repos
 
 | Repo | Purpose |
 |---|---|
-| [`sleuthgraph`](https://github.com/sleuthgraph/sleuthgraph) | This meta repo — docs, specs, plans, docker-compose |
-| [`sleuthgraph-api`](https://github.com/sleuthgraph/sleuthgraph-api) | Backend: FastAPI + Postgres+AGE + plugin SDK |
-| [`sleuthgraph-web`](https://github.com/sleuthgraph/sleuthgraph-web) | Frontend: Next.js + Cytoscape.js |
+| [`francose/sleuthgraph`](https://github.com/francose/sleuthgraph) | This meta repo — docs, specs, plans, docker-compose |
+| [`francose/sleuthgraph-api`](https://github.com/francose/sleuthgraph-api) | Backend: Python 3.12 + FastAPI + Postgres + AGE + arq worker + plugin SDK |
+| [`francose/sleuthgraph-web`](https://github.com/francose/sleuthgraph-web) | Frontend: Next.js 16 + Mantine v8 + Cytoscape.js |
 
 ## Quickstart (local dev)
 
-Requires: Docker 24+, Docker Compose v2, git.
+Requires Docker 24+, Docker Compose v2, and git.
 
 ```bash
 # Clone all three repos as siblings
-git clone https://github.com/sleuthgraph/sleuthgraph.git
-git clone https://github.com/sleuthgraph/sleuthgraph-api.git
-git clone https://github.com/sleuthgraph/sleuthgraph-web.git
+git clone https://github.com/francose/sleuthgraph.git
+git clone https://github.com/francose/sleuthgraph-api.git
+git clone https://github.com/francose/sleuthgraph-web.git
 
 cd sleuthgraph/deploy
 cp .env.example .env
+```
+
+**Before `make up`, edit `.env` and set at minimum:**
+
+```bash
+# Generate strong random values with: openssl rand -hex 32
+SECRET_KEY=...
+REDIS_PASSWORD=...
+
+# Bootstraps the first superuser on startup. Change these.
+AUTH_ADMIN_EMAIL=you@example.com
+AUTH_ADMIN_PASSWORD=your-strong-password
+
+# Optional — only if you want SSO. See auth-oidc docs below.
+# OIDC_ISSUER=https://your-idp.example.com
+# OIDC_CLIENT_ID=...
+# OIDC_CLIENT_SECRET=...
+# OIDC_REDIRECT_URL=http://localhost:8000/auth/oidc/callback
+```
+
+Then:
+
+```bash
 make up
 ```
 
-Open http://localhost:3000 (web) and http://localhost:8000/docs (api).
+Open:
+- **Web:** http://localhost:3000 — log in with the admin credentials above
+- **API docs:** http://localhost:8000/docs
+- **MinIO console:** http://localhost:9001 (evidence bucket pre-created)
 
 ## Docs
 
 - [MVP design spec](docs/specs/2026-04-17-sleuthgraph-mvp-design.md)
-- [Implementation plans](docs/plans/README.md)
+- [Implementation plans](docs/plans/) — phase-by-phase, TDD-style
+- [OIDC setup guide](https://github.com/francose/sleuthgraph-api/blob/main/docs/auth-oidc.md) — Keycloak, Authentik, Google
+- [Plugin catalog](https://github.com/francose/sleuthgraph-api/blob/main/docs/plugins.md) — all 8 built-in plugins with input/output contracts
+
+## Phase status
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1. Foundation | ✅ 2026-04-17 | Docker stack, Postgres + AGE, MinIO, Redis, CI |
+| 2. Auth (Grafana-style) | ✅ 2026-04-20 | fastapi-users, cookie+JWT, admin bootstrap, signup toggle |
+| 2.5. Auth UI completeness | ✅ 2026-04-21 | Register / forgot-password / reset-password pages; `/auth/config` |
+| 2.6. OIDC full flow | ✅ 2026-04-22 | PKCE, id_token validation, `email_verified` enforcement, account linking |
+| 3. Cases + Entities + Relationships API | ✅ 2026-04-20 | SQL + AGE dual-write, ownership, typed enums |
+| 3.5 / 3.6. Frontend shell + Entities UI | ✅ 2026-04-21 | Mantine dark theme, case detail page, entity / rel panels |
+| 4. Evidence chain of custody | ✅ 2026-04-21 | MinIO content-addressed storage, append-only ledger, CSV export |
+| 4.5. Evidence UI | ✅ 2026-04-21 | Upload modal, detail drawer, hash verification |
+| 5. Plugin SDK + crt.sh | ✅ 2026-04-21 | `OSINTPlugin` ABC, runner, dedup, exception taxonomy |
+| 5.5. Plugin run UI | ✅ 2026-04-21 | Run modal, runs table, status polling |
+| 6. 7 more free plugins + arq queue | ✅ 2026-04-22 | dns_whois, wayback_cdx, opencorporates, github_public, opensanctions, aleph_occrp, urlhaus + async worker |
+| 7. BYOK credentialed plugins | ⏳ Pending | HIBP, VirusTotal, IntelX, Shodan + encrypted credential vault |
+| 8. Frontend shell | ✅ rolled into 3.5 / 3.6 / 4.5 / 5.5 | |
+| 9. Graph visualization | ✅ 2026-04-22 | Cytoscape canvas, 4 layouts w/ animated transitions, hover focus lens |
+| 10. AI + reports + polish | ⏳ Pending | Claude API pivot suggestions, report export, 0.1.0 release |
+
+### Current scale (as of 2026-04-22)
+
+- 419 pytest cases passing on `sleuthgraph-api`
+- 113 vitest cases passing on `sleuthgraph-web`
+- 8 registered plugins, all free-tier
+- 6-service docker-compose stack: `db` (Postgres + AGE), `redis` (AUTH-required), `minio`, `api`, `worker`, `web`
+- CI pipelines configured on all three repos
+
+## Architecture
+
+```
+┌──────────────┐     ┌─────────────┐     ┌──────────────┐
+│ Next.js 16   │────▶│ FastAPI API │────▶│ Postgres+AGE │
+│ Mantine v8   │     │ fastapi-    │     │  SQL + Cypher│
+│ Cytoscape.js │     │ users       │     └──────────────┘
+└──────────────┘     │             │     ┌──────────────┐
+                     │ OSINTPlugin │────▶│ MinIO (S3)   │
+                     │ SDK         │     │ evidence     │
+                     └──────┬──────┘     └──────────────┘
+                            │
+                            ▼
+                     ┌─────────────┐     ┌──────────────┐
+                     │ arq worker  │────▶│ Redis        │
+                     │ (async      │     │ queue +      │
+                     │  dispatch)  │     │ cache (AUTH) │
+                     └─────────────┘     └──────────────┘
+```
 
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
-
-## Status
-
-| Phase | Status | Notes |
-|---|---|---|
-| 1. Foundation | ✅ Complete (2026-04-17) | `make up` brings full stack healthy; 12 tests passing; all 3 repos live |
-| 2. Auth (Grafana-style) | ⏳ Pending | |
-| 3. Cases + Entities API | ⏳ Pending | |
-| 4. Evidence chain of custody | ⏳ Pending | |
-| 5. Plugin SDK | ⏳ Pending | |
-| 6. Free-tier plugins (7) | ⏳ Pending | |
-| 7. BYOK plugins | ⏳ Pending | |
-| 8. Frontend shell | ⏳ Pending | |
-| 9. Graph visualization | ⏳ Pending | |
-| 10. AI + Reports + polish | ⏳ Pending | |
-
-### Phase 1 exit state (as of 0.1.0-alpha)
-
-- Meta, API, and Web repos public on GitHub (currently private under `francose/`)
-- `docker compose up` brings up 5 healthy services: db (Postgres+AGE), redis, minio, api, web
-- API: `/health`, `/readiness`, `/docs` endpoints live on :8000
-- Web: landing page with live API health indicator on :3000
-- MinIO console on :9001 with `evidence` bucket pre-created
-- AGE extension installed with `sleuthgraph` graph
-- 12 unit tests passing (7 API + 5 Web)
-- CI pipelines configured on all three repos
