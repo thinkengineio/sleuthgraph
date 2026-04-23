@@ -27,13 +27,22 @@ Think **Grafana for OSINT**: you bring the cases, plugins pivot across public AP
 - **Phase 7** — BYOK credentialed plugins (HIBP, VirusTotal, IntelX, Shodan premium) with encrypted credential vault
 - **Phase 10** — AI-assisted pivot suggestions + report export (Claude API integration)
 
+## Editions
+
+Sleuthgraph ships in three editions — Community (open source, Apache 2.0),
+Cloud (hosted at sleuthgraph.io), and Enterprise (self-host + license).
+**Community is free forever.** See [TIERS.md](TIERS.md) for the full matrix
+of what ships in each tier.
+
 ## Repos
 
-| Repo | Purpose |
-|---|---|
-| [`francose/sleuthgraph`](https://github.com/francose/sleuthgraph) | This meta repo — docs, specs, plans, docker-compose |
-| [`francose/sleuthgraph-api`](https://github.com/francose/sleuthgraph-api) | Backend: Python 3.12 + FastAPI + Postgres + AGE + arq worker + plugin SDK |
-| [`francose/sleuthgraph-web`](https://github.com/francose/sleuthgraph-web) | Frontend: Next.js 16 + Mantine v8 + Cytoscape.js |
+| Repo | Visibility | Purpose |
+|---|---|---|
+| [`francose/sleuthgraph`](https://github.com/francose/sleuthgraph) | public | This meta repo — docs, specs, plans, docker-compose |
+| [`francose/sleuthgraph-api`](https://github.com/francose/sleuthgraph-api) | public | Backend: Python 3.12 + FastAPI + Postgres + AGE + arq worker + plugin SDK |
+| [`francose/sleuthgraph-web`](https://github.com/francose/sleuthgraph-web) | public | Frontend: Next.js 16 + Mantine v8 + Cytoscape.js |
+| `francose/sleuthgraph-enterprise` | private | Enterprise-only features (AI, RBAC, compliance, paid adapters) — license required |
+| `francose/sleuthgraph-cloud` | private | Operator-only infrastructure for sleuthgraph.io — never distributed |
 
 ## Quickstart (local dev)
 
