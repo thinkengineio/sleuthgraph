@@ -1,6 +1,8 @@
 # Sleuthgraph
 
-Open-source OSINT investigation workbench. Self-hostable. Apache 2.0.
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
+Open-source OSINT investigation workbench — Grafana for OSINT. Self-hostable. Apache 2.0.
 
 > **Status:** Pre-alpha — APIs may change between releases. Core investigation workflow is end-to-end usable: log in, create a case, add entities, pivot across 8 free OSINT plugins, inspect results in an interactive Cytoscape graph with full evidence chain of custody.
 
@@ -29,10 +31,60 @@ Think **Grafana for OSINT**: you bring the cases, plugins pivot across public AP
 
 ## Editions
 
-Sleuthgraph ships in three editions — Community (open source, Apache 2.0),
-Cloud (hosted at sleuthgraph.io), and Enterprise (self-host + license).
-**Community is free forever.** See [TIERS.md](TIERS.md) for the full matrix
-of what ships in each tier.
+Sleuthgraph ships in two editions — Community (open source, Apache 2.0) and
+Cloud (hosted at sleuthgraph.io). **Community is free forever.** See
+[TIERS.md](TIERS.md) for the full matrix of what ships in each tier.
+
+## 2-minute quickstart
+
+Requires Docker 24+, Docker Compose v2, and git.
+
+```bash
+git clone https://github.com/francose/sleuthgraph.git
+git clone https://github.com/francose/sleuthgraph-api.git
+git clone https://github.com/francose/sleuthgraph-web.git
+
+cd sleuthgraph/deploy
+cp .env.example .env   # edit SECRET_KEY, REDIS_PASSWORD, AUTH_ADMIN_EMAIL, AUTH_ADMIN_PASSWORD
+docker compose up
+```
+
+Open **http://localhost:3000** and log in with the admin credentials you set in `.env`.
+
+- **API docs:** http://localhost:8000/docs
+- **MinIO console:** http://localhost:9001 (evidence bucket pre-created)
+
+Minimum required `.env` values (generate secrets with `openssl rand -hex 32`):
+
+```bash
+SECRET_KEY=...
+REDIS_PASSWORD=...
+AUTH_ADMIN_EMAIL=you@example.com
+AUTH_ADMIN_PASSWORD=your-strong-password
+```
+
+## Architecture
+
+6-service Docker stack — all services defined in `deploy/docker-compose.yml`.
+
+```
+┌──────────────┐     ┌─────────────┐     ┌──────────────┐
+│   web        │────▶│    api      │────▶│ db           │
+│ Next.js 16   │     │ FastAPI     │     │ Postgres+AGE │
+│ Mantine v8   │     │ fastapi-    │     │ SQL + Cypher │
+│ Cytoscape.js │     │ users       │     └──────────────┘
+└──────────────┘     │             │     ┌──────────────┐
+                     │ OSINTPlugin │────▶│ minio        │
+                     │ SDK         │     │ evidence     │
+                     └──────┬──────┘     └──────────────┘
+                            │
+                            ▼
+                     ┌─────────────┐     ┌──────────────┐
+                     │   worker    │────▶│ redis        │
+                     │ arq async   │     │ queue +      │
+                     │  dispatch   │     │ cache (AUTH) │
+                     └─────────────┘     └──────────────┘
+```
 
 ## Repos
 
@@ -41,51 +93,7 @@ of what ships in each tier.
 | [`francose/sleuthgraph`](https://github.com/francose/sleuthgraph) | public | This meta repo — docs, specs, plans, docker-compose |
 | [`francose/sleuthgraph-api`](https://github.com/francose/sleuthgraph-api) | public | Backend: Python 3.12 + FastAPI + Postgres + AGE + arq worker + plugin SDK |
 | [`francose/sleuthgraph-web`](https://github.com/francose/sleuthgraph-web) | public | Frontend: Next.js 16 + Mantine v8 + Cytoscape.js |
-| `francose/sleuthgraph-enterprise` | private | Enterprise-only features (AI, RBAC, compliance, paid adapters) — license required |
 | `francose/sleuthgraph-cloud` | private | Operator-only infrastructure for sleuthgraph.io — never distributed |
-
-## Quickstart (local dev)
-
-Requires Docker 24+, Docker Compose v2, and git.
-
-```bash
-# Clone all three repos as siblings
-git clone https://github.com/francose/sleuthgraph.git
-git clone https://github.com/francose/sleuthgraph-api.git
-git clone https://github.com/francose/sleuthgraph-web.git
-
-cd sleuthgraph/deploy
-cp .env.example .env
-```
-
-**Before `make up`, edit `.env` and set at minimum:**
-
-```bash
-# Generate strong random values with: openssl rand -hex 32
-SECRET_KEY=...
-REDIS_PASSWORD=...
-
-# Bootstraps the first superuser on startup. Change these.
-AUTH_ADMIN_EMAIL=you@example.com
-AUTH_ADMIN_PASSWORD=your-strong-password
-
-# Optional — only if you want SSO. See auth-oidc docs below.
-# OIDC_ISSUER=https://your-idp.example.com
-# OIDC_CLIENT_ID=...
-# OIDC_CLIENT_SECRET=...
-# OIDC_REDIRECT_URL=http://localhost:8000/auth/oidc/callback
-```
-
-Then:
-
-```bash
-make up
-```
-
-Open:
-- **Web:** http://localhost:3000 — log in with the admin credentials above
-- **API docs:** http://localhost:8000/docs
-- **MinIO console:** http://localhost:9001 (evidence bucket pre-created)
 
 ## Docs
 
@@ -113,34 +121,6 @@ Open:
 | 8. Frontend shell | ✅ rolled into 3.5 / 3.6 / 4.5 / 5.5 | |
 | 9. Graph visualization | ✅ 2026-04-22 | Cytoscape canvas, 4 layouts w/ animated transitions, hover focus lens |
 | 10. AI + reports + polish | ⏳ Pending | Claude API pivot suggestions, report export, 0.1.0 release |
-
-### Current scale (as of 2026-04-22)
-
-- 419 pytest cases passing on `sleuthgraph-api`
-- 113 vitest cases passing on `sleuthgraph-web`
-- 8 registered plugins, all free-tier
-- 6-service docker-compose stack: `db` (Postgres + AGE), `redis` (AUTH-required), `minio`, `api`, `worker`, `web`
-- CI pipelines configured on all three repos
-
-## Architecture
-
-```
-┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│ Next.js 16   │────▶│ FastAPI API │────▶│ Postgres+AGE │
-│ Mantine v8   │     │ fastapi-    │     │  SQL + Cypher│
-│ Cytoscape.js │     │ users       │     └──────────────┘
-└──────────────┘     │             │     ┌──────────────┐
-                     │ OSINTPlugin │────▶│ MinIO (S3)   │
-                     │ SDK         │     │ evidence     │
-                     └──────┬──────┘     └──────────────┘
-                            │
-                            ▼
-                     ┌─────────────┐     ┌──────────────┐
-                     │ arq worker  │────▶│ Redis        │
-                     │ (async      │     │ queue +      │
-                     │  dispatch)  │     │ cache (AUTH) │
-                     └─────────────┘     └──────────────┘
-```
 
 ## License
 
