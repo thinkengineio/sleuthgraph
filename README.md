@@ -45,7 +45,7 @@ git clone https://github.com/francose/sleuthgraph-api.git
 git clone https://github.com/francose/sleuthgraph-web.git
 
 cd sleuthgraph/deploy
-cp .env.example .env   # edit SECRET_KEY, REDIS_PASSWORD, AUTH_ADMIN_EMAIL, AUTH_ADMIN_PASSWORD
+cp .env.example .env   # edit SECRET_KEY, REDIS_PASSWORD, POSTGRES_PASSWORD, MINIO_ROOT_PASSWORD, AUTH_ADMIN_EMAIL, AUTH_ADMIN_PASSWORD
 docker compose up
 ```
 
@@ -59,6 +59,8 @@ Minimum required `.env` values (generate secrets with `openssl rand -hex 32`):
 ```bash
 SECRET_KEY=...
 REDIS_PASSWORD=...
+POSTGRES_PASSWORD=...
+MINIO_ROOT_PASSWORD=...
 AUTH_ADMIN_EMAIL=you@example.com
 AUTH_ADMIN_PASSWORD=your-strong-password
 ```

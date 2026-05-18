@@ -19,7 +19,7 @@ services:
       timeout: 3s
       retries: 10
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
   redis:
     image: redis:7-alpine
@@ -53,8 +53,8 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - "9000:9000"  # S3 API
-      - "9001:9001"  # Web console
+      - "127.0.0.1:9000:9000"  # S3 API
+      - "127.0.0.1:9001:9001"  # Web console
 
   # minio-bootstrap creates the evidence bucket on first run.
   minio-bootstrap:
