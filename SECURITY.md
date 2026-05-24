@@ -13,7 +13,7 @@
 If you discover a security vulnerability, please report it responsibly:
 
 - **Email:** security@sleuthgraph.io
-- **GitHub:** Use [GitHub's private vulnerability reporting](https://github.com/francose/sleuthgraph/security/advisories/new)
+- **GitHub:** Use [GitHub's private vulnerability reporting](https://github.com/thinkengineio/sleuthgraph/security/advisories/new)
 
 ### What to expect
 
